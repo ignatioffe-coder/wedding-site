@@ -31,7 +31,6 @@
             background-size: cover;
             background-position: center;
             border-radius: 10px;
-            margin-bottom: 40px;
         }
 
         h1 {
@@ -92,20 +91,20 @@
             font-size: 1rem;
         }
 
-select {
-    font-family: 'Century Gothic', 'Futura', 'Avenir', sans-serif;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-    background: white;
-    color: #333;
-    width: 100%;
-    cursor: pointer;
-}
-select:invalid {
-    color: #999;
-}
+        select {
+            font-family: 'Century Gothic', 'Futura', 'Avenir', sans-serif;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+            color: #333;
+            width: 100%;
+            cursor: pointer;
+        }
+        select:invalid {
+            color: #999;
+        }
 
         button {
             font-family: 'Century Gothic', 'Futura', 'Avenir', sans-serif;
@@ -133,7 +132,6 @@ select:invalid {
         /* === ТАЙМЕР === */
         .countdown {
             text-align: center;
-            margin-bottom: 40px;
         }
 
         .countdown h2 {
@@ -192,7 +190,6 @@ select:invalid {
 
         /* === ПРОГРАММА ДНЯ === */
         .program-section {
-            background: #fdfbf7;
             text-align: center;
         }
 
@@ -300,7 +297,6 @@ select:invalid {
 
         /* === ДРЕСС-КОД === */
         .dresscode-section {
-            background: #fdfbf7;
             text-align: center;
         }
 
@@ -353,7 +349,6 @@ select:invalid {
 
         /* === ПО ВСЕМ ВОПРОСАМ === */
         .contacts-section {
-            background: #fdfbf7;
             text-align: center;
         }
 
@@ -384,6 +379,27 @@ select:invalid {
 
         .contacts-username:hover {
             color: #5a3e3e;
+        }
+
+        /* === СТАТУС ОТПРАВКИ === */
+        .form-status {
+            display: none;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .form-status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .form-status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         @media (max-width: 700px) {
@@ -422,14 +438,16 @@ select:invalid {
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Приглашаем на роспись</h1>
-            <div class="couple-names">Екатерина и Игнат</div>
-            <div class="date-time">16.06.2026 в 12:00</div>
-        </header>
+        <section>
+            <header>
+                <h1>Приглашаем на роспись</h1>
+                <div class="couple-names">Екатерина и Игнат</div>
+                <div class="date-time">16.06.2026 в 12:00</div>
+            </header>
+        </section>
 
         <!-- Таймер -->
-        <div class="countdown">
+        <section class="countdown">
             <h2>До встречи осталось</h2>
             <div class="countdown-items">
                 <div class="countdown-item">
@@ -449,7 +467,7 @@ select:invalid {
                     <span class="label">СЕКУНД</span>
                 </div>
             </div>
-        </div>
+        </section>
 
         <section>
             <h2>Наше торжество</h2>
@@ -564,16 +582,17 @@ select:invalid {
 
         <section>
             <h2>Подтвердите присутствие</h2>
-            <form class="rsvp-form">
-                <input type="text" placeholder="Ваше имя" required>
-<select required>
-    <option value="" disabled selected>Буду к...</option>
-    <option value="ros">Буду к росписи</option>
-    <option value="zast">Буду к застолью</option>
-    <option value="no">К сожалению, не смогу</option>
-</select>
-                <textarea placeholder="Ваши пожелания или вопросы" rows="4"></textarea>
+            <form class="rsvp-form" action="https://formspree.io/f/xlgvypaq" method="POST">
+                <input type="text" name="name" placeholder="Ваше имя" required>
+                <select name="attendance" required>
+                    <option value="" disabled selected>Буду к...</option>
+                    <option value="ros">Буду к росписи</option>
+                    <option value="zast">Буду к застолью</option>
+                    <option value="no">К сожалению, не смогу</option>
+                </select>
+                <textarea name="message" placeholder="Ваши пожелания или вопросы" rows="4"></textarea>
                 <button type="submit">Отправить ответ</button>
+                <div class="form-status" id="formStatus"></div>
             </form>
         </section>
 
@@ -611,10 +630,34 @@ select:invalid {
         updateCountdown();
         setInterval(updateCountdown, 1000);
         
-        document.querySelector('.rsvp-form').addEventListener('submit', function(e) {
+        // Formspree AJAX отправка
+        const form = document.querySelector('.rsvp-form');
+        const statusDiv = document.getElementById('formStatus');
+        
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('Спасибо! Ваш ответ отправлен Екатерине и Игнату.');
-            this.reset();
+            const data = new FormData(form);
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: data,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    statusDiv.textContent = 'Спасибо! Ваш ответ отправлен.';
+                    statusDiv.className = 'form-status success';
+                    form.reset();
+                } else {
+                    throw new Error('Ошибка отправки');
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Что-то пошло не так. Попробуйте ещё раз или напишите в Telegram.';
+                statusDiv.className = 'form-status error';
+            }
         });
     </script>
 </body>
